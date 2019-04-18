@@ -36,3 +36,9 @@
 epoll服务器的机制类似于非阻塞，但是却不是非阻塞。因为epoll采用的并不是轮询的笨方式，而是采用**os级别的监听，利用事件通知的机制**来达到单线程的多并发。代码实现见`apps/epoll.py`。
 * epoll服务器利用os层来监听事件，当对应事件发生时，通知绑定了该事件的fd。
 * epoll是最高效的服务器方式。
+
+# WSGI
+WSGI是一套服务器协议，它沟通服务器软件和框架，使得二者可以很好的解耦。在WSGI中有一些成文的要求：
+* 在WSGI中实现`set_header(status, headers)`函数，它用来封装响应头。
+* 在框架中实现`application(env, start_reponse)`，其中`env`为请求头字典，`start_response`即WSGI中的`set_header`。该函数返回响应体。
+* 在WSGI中调用`application`，输入`请求头字典env`和`set_header`，输出`响应体body`。
