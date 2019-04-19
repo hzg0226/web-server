@@ -2,16 +2,15 @@ import sys
 import multiprocessing
 from socket import *
 
-from dynamic.mini_frame import application
-
 class Server(object):
-    def __init__(self, port):
+    def __init__(self, port, app):
         # 套接字
         self.ss = socket(AF_INET, SOCK_STREAM)
         self.ss.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1) # 开启端口立即复用
         self.ss.bind(('', port))
         self.ss.listen(10)
 
+        self.app = app
         self.env = {}
         self.header = ''
 
@@ -37,7 +36,7 @@ class Server(object):
             if recv_data:
                 self.get_env(recv_data)
                 # 由于body可能是图片、视频、文本等众多格式，故统一采用"rb"格式读取，返回的是bytes
-                body = application(self.env, self.set_header)
+                body = self.app(self.env, self.set_header)
                 client.send(self.header.encode('utf-8'))
                 client.send(body)
             else:
@@ -58,16 +57,25 @@ class Server(object):
         self.header += 'HTTP/1.1 ' + status + '\r\n'
         for temp in headers:
             self.header += '%s:%s\r\n'%temp
+        # 增加与服务器有关的头
+        self.header += 'Server: My server\r\n'
         self.header += '\r\n' # header和body之间的空行
 
 
 def main():
-    if len(sys.argv) == 1:
-        port = 8080
+    # python3 web.py 8080 mini_frame:application
+    try:
+        port = int(sys.argv[1])
+        frame_name, app_name = sys.argv[2].split(':')
+
+        sys.path.append('./dynamic')
+        frame = __import__(frame_name)
+        app = getattr(frame, app_name)
+    except Exception:
+        print('run as "python3 web.py 8080 mini_frame:application"')
     else:
-        port = sys.argv[1]
-    server = Server(port)
-    server.run()
+        server = Server(port, app)
+        server.run()
 
 if __name__ == '__main__':
     main()
