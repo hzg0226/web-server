@@ -1,50 +1,57 @@
 import time
 
+# 路由字典，path-func
+URL_FUNC = dict()
+
+# 路由装饰器
+def route(url):
+    def set_func(func):
+        URL_FUNC[url] = func
+        def call_func(*args, **kwargs):
+            return func(*args, **kwargs)
+        return call_func
+    return set_func
+
+@route('/index')
 def index():
     with open('./templates/index.html', 'rb') as f:
         content = f.read()
     return content
 
+@route('/center')
 def center():
     with open('./templates/center.html', 'rb') as f:
         content = f.read()
     return content
-    
+
+@route('/login')
 def login():
     return '<h1>login</h1>'.encode('utf-8')
 
+@route('/register')
 def register():
     return '<h1>register</h1>'.encode('utf-8')
+
 
 def application(env, start_response):
     path = env['path']
     flag = True
     if path == '/':
-        path = '/index.py' # default page is the index.html
+        path = '/index' # default page is the index.html
     
-    if not path.endswith('.py'):
-        # static file
-        try:
+    try:
+        if path in URL_FUNC.keys():
+            # dynamic file
+            body = URL_FUNC[path]()
+        else:
+            # static file
             f = open('./static'+path, 'rb')
             body = f.read()
-        except Exception as ret:
-            flag = False
-            body = b''
-            print(ret)
-    else:
-        # dynamic file
-        if path == '/index.py':
-            body = index()
-        elif path == '/center.py':
-            body = center()
-        else:
-            flag = False
-            body = '<h1>404, not found</h1>'.encode('utf-8')
-    
-    if flag:
-        status = '200 OK'
-    else:
+    except Exception:
+        body = '<h1>404, not found</h1>'.encode('utf-8')
         status = '404 NOT FOUND'
+    else:
+        status = '200 OK'
 
     headers = [
         ('Connection', 'Keep-Alive'),

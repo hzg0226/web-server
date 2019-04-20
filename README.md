@@ -38,7 +38,21 @@ epoll服务器的机制类似于非阻塞，但是却不是非阻塞。因为epo
 * epoll是最高效的服务器方式。
 
 # WSGI
+
+## 基本框架
 WSGI是一套服务器协议，它沟通服务器软件和框架，使得二者可以很好的解耦。在WSGI中有一些成文的要求：
 * 在WSGI中实现`set_header(status, headers)`函数，它用来封装响应头。
 * 在框架中实现`application(env, start_reponse)`，其中`env`为请求头字典，`start_response`即WSGI中的`set_header`。该函数返回响应体。
 * 在WSGI中调用`application`，输入`请求头字典env`和`set_header`，输出`响应体body`。
+
+## 使用装饰器实现路由功能
+使用带参数的装饰器对每一个功能模块进行装饰，参数是请求的路径。可以使用一个`url-func`的字典来保存路径和路径的一一映射。使用的装饰器如下：
+```python
+def route(url):
+    def set_func(func):
+        URL_FUNC[url] = func
+        def call_func(*args, **kwargs):
+            return func(*args, **kwargs)
+        return call_func
+    return set_func
+```
