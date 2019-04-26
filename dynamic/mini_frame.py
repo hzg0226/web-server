@@ -12,23 +12,23 @@ def route(url):
         return call_func
     return set_func
 
-@route('/index')
+@route('/index.html')
 def index():
     with open('./templates/index.html', 'rb') as f:
         content = f.read()
     return content
 
-@route('/center')
+@route('/center.html')
 def center():
     with open('./templates/center.html', 'rb') as f:
         content = f.read()
     return content
 
-@route('/login')
+@route('/login.html')
 def login():
     return '<h1>login</h1>'.encode('utf-8')
 
-@route('/register')
+@route('/register.html')
 def register():
     return '<h1>register</h1>'.encode('utf-8')
 
@@ -37,7 +37,7 @@ def application(env, start_response):
     path = env['path']
     flag = True
     if path == '/':
-        path = '/index' # default page is the index.html
+        path = '/index.html' # default page is the index.html
     
     try:
         if path in URL_FUNC.keys():
