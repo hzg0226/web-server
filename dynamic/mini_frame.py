@@ -1,4 +1,5 @@
 import time
+import pymysql
 
 # 路由字典，path-func
 URL_FUNC = dict()
@@ -12,17 +13,74 @@ def route(url):
         return call_func
     return set_func
 
+# 执行sql，返回数据
+def execute_sql(sql, params):
+    conn = pymysql.connect(host='192.168.56.104', port=3306, database='stock_db', charset='utf8', user='root', password='123456')
+    cs = conn.cursor()
+    cs.execute(sql, params)
+    return cs.fetchall()
+
 @route('/index.html')
 def index():
     with open('./templates/index.html', 'rb') as f:
-        content = f.read()
-    return content
+        content = f.read().decode('utf-8')
+	
+    sql = 'select * from info;'
+    params = []
+    data = execute_sql(sql, params)
+    tr_template = '''
+        <tr>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>
+                <input type="button" value="删除" id="toDel" name="toDel" systemidvaule="%s">
+            </td>
+        </tr>
+	'''
+    haha = ''
+    for info in data:
+        haha += tr_template%(info[0], info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[0])
+    content = content.replace('{%content%}', haha)
+
+    return content.encode('utf-8')
 
 @route('/center.html')
 def center():
     with open('./templates/center.html', 'rb') as f:
-        content = f.read()
-    return content
+        content = f.read().decode('utf-8')
+    
+    sql = 'select code, short, chg, turnover, price, highs, note_info from info, focus where focus.info_id=info.id'
+    params = []
+    data = execute_sql(sql, params)
+    tr_template = '''
+        <tr>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>%s</td>
+            <td>
+                <a type="button" class="btn btn-default btn-xs" href="/update/%s.html"> <span class="glyphicon glyphicon-star" aria-hidden="true"></span> 修改 </a>
+            </td>
+            <td>
+                <input type="button" value="删除" id="toDel" name="toDel" systemidvaule="%s">
+            </td>
+        </tr>
+	'''
+    haha = ''
+    for info in data:
+        haha += tr_template%(info[0], info[1], info[2], info[3], info[4], info[5], info[6], info[0], info[0])
+    content = content.replace('{%content%}', haha)
+    
+    return content.encode('utf-8')
 
 @route('/login.html')
 def login():
@@ -47,7 +105,8 @@ def application(env, start_response):
             # static file
             f = open('./static'+path, 'rb')
             body = f.read()
-    except Exception:
+    except Exception as ret:
+        print(ret)
         body = '<h1>404, not found</h1>'.encode('utf-8')
         status = '404 NOT FOUND'
     else:
