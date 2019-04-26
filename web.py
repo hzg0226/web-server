@@ -19,6 +19,9 @@ class Server(object):
         self.ss.close()
     
     def run(self):
+        '''运行服务器
+        每来一个用户就创建子进程，调用handle_client处理之。
+        '''
         print('Server is starting......')
         while True:
             new_client, new_addr = self.ss.accept()
@@ -30,6 +33,9 @@ class Server(object):
             new_client.close()
     
     def handle_client(self, client):
+        '''处理用户请求
+        一直循环状态，直到客户端关闭
+        '''
         while True:
             recv_data = client.recv(1024)
             # 收到的数据为空时表明客户端已断开连接
@@ -45,6 +51,9 @@ class Server(object):
                 break
     
     def get_env(self, recv_data):
+        '''解析客户端的请求头
+        获取请求头中的各个字段，如protocal, path, method等
+        '''
         headers = recv_data.decode('utf-8').splitlines()
         headers.pop()  # header和body之间的空
         self.env['protocal'], self.env['path'], self.env['method'] = headers[0].split()
@@ -53,6 +62,8 @@ class Server(object):
             self.env[k] = v.strip()
 
     def set_header(self, status, headers):
+        '''封装框架返回的状态码和响应头
+        '''
         self.header = ''
         self.header += 'HTTP/1.1 ' + status + '\r\n'
         for temp in headers:
