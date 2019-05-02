@@ -1,6 +1,7 @@
 import time
 import pymysql
 import re
+from urllib import parse
 
 # 路由字典，path-func
 URL_FUNC = dict()
@@ -156,13 +157,13 @@ def delete(ret):
     content = content.replace('{%note_info%}', info)
     return content.encode('utf-8')
 
-@route(r'/update/(\d+)/(\w*)\.html')
+@route(r'/update/(\d+)/(.*)\.html')
 @use_mysql
 def delete(ret):
     print(ret.group(1), ret.group(2))
     
     sql = 'update focus set note_info=%s where info_id=(select id from info where code=%s)'
-    params = [ret.group(2), ret.group(1)]
+    params = [parse.unquote(ret.group(2)), ret.group(1)] # url编码问题
     try:
         CS.execute(sql, params)
     except Exception:
