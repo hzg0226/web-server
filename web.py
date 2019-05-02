@@ -82,7 +82,8 @@ def main():
         sys.path.append('./dynamic')
         frame = __import__(frame_name)
         app = getattr(frame, app_name)
-    except Exception:
+    except Exception as ret:
+        print(ret)
         print('run as "python3 web.py 8080 mini_frame:application"')
     else:
         server = Server(port, app)
